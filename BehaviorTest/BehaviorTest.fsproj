@@ -3,11 +3,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{A5543105-1977-4323-8A9E-96A1CFE64869}</ProjectGuid>
-    <ProjectTypeGuids>{FEACFBD2-3405-455C-9665-78FE426C6842};{F2A71F9B-5D33-465A-A702-920D77279786}</ProjectTypeGuids>
+    <ProjectGuid>{E2402B8D-4F5C-479A-8AD7-EBEB4E1485F9}</ProjectGuid>
     <OutputType>Library</OutputType>
-    <RootNamespace>Atom</RootNamespace>
-    <AssemblyName>Atom</AssemblyName>
+    <RootNamespace>BehaviorTest</RootNamespace>
+    <AssemblyName>BehaviorTest</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -33,20 +32,22 @@
     <Tailcalls>true</Tailcalls>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="RenderBuilder.fs" />
-    <Compile Include="Axon.fs" />
-    <Compile Include="Util.fs" />
-    <Compile Include="Observable.fs" />
-    <Compile Include="Behaviors.fs" />
-  </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.FSharp.targets" />
-  <ItemGroup>
+    <Reference Include="mscorlib" />
+    <Reference Include="FSharp.Core" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Numerics" />
-    <Reference Include="System.Xml" />
+    <Reference Include="nunit.framework" />
+    <Reference Include="Atom">
+      <HintPath>..\Atom\bin\Debug\Atom.dll</HintPath>
+    </Reference>
     <Reference Include="FSharp.Control.Reactive">
       <HintPath>..\Libs\FSharp.Control.Reactive.dll</HintPath>
+    </Reference>
+    <Reference Include="FsPickler">
+      <HintPath>..\Libs\FsPickler.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Reactive.Core">
+      <HintPath>..\Libs\System.Reactive.Core.dll</HintPath>
     </Reference>
     <Reference Include="System.Reactive.Interfaces">
       <HintPath>..\Libs\System.Reactive.Interfaces.dll</HintPath>
@@ -54,12 +55,12 @@
     <Reference Include="System.Reactive.Linq">
       <HintPath>..\Libs\System.Reactive.Linq.dll</HintPath>
     </Reference>
-    <Reference Include="Xamarin.iOS" />
-    <Reference Include="System.Reactive.Core">
-      <HintPath>..\Libs\System.Reactive.Core.dll</HintPath>
-    </Reference>
-    <Reference Include="FsPickler">
-      <HintPath>..\Libs\FsPickler.dll</HintPath>
+    <Reference Include="websocket-sharp">
+      <HintPath>..\Libs\websocket-sharp.dll</HintPath>
     </Reference>
   </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BehaviorTests.fs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
 </Project>

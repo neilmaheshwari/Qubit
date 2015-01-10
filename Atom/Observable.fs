@@ -7,7 +7,7 @@ open System.Reactive.Disposables
 open Nessos.FsPickler
 open Nessos.FsPickler.Combinators
 
-type Property<'T> (observable:IObservable<'T>, initial) =
+type Property<'T> (observable: IObservable<'T>, initial) =
 
     let mutable cached = false
     let mutable value = initial
@@ -132,7 +132,7 @@ module Observable =
 
     open __
 
-    let property<'T> initial obs =
+    let property (initial : 'T) obs =
         new Property<'T> (obs, initial)
 
     let remote channel = (get channel)
