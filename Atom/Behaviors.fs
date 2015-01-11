@@ -47,21 +47,6 @@ module Behaviors =
 
     let exposeStream (b : Behavior<'T>) = b.ExposeStream
 
-    let fmap f =
-        fun b -> 
-            match b with
-            | Constant _ -> 
-                Constant (f (value b))
-            | Varying _ -> 
-                let newStream = exposeStream b
-                                |> Observable.map f
-                let currentValue = f (value b)
-                Observable.property currentValue newStream
-                |> Varying    
-
-    let bind (behavior : Behavior<'a>) (fn : ('a -> Behavior<'b>)) : Behavior<'b> =
-        fn (value behavior)
-
     let returnC t = Constant t
 
     let returnV obs = 
@@ -70,6 +55,17 @@ module Behaviors =
         b |> exposeStream |> Observable.subscribe ignore |> ignore
         b
 
+    let fmap f =
+        fun b -> 
+            match b with
+            | Constant _ -> 
+                Constant (f (value b))
+            | Varying _ -> 
+                let newStream = exposeStream b |> Observable.map f
+                returnV newStream
+
+    let bind (behavior : Behavior<'a>) (fn : ('a -> Behavior<'b>)) : Behavior<'b> =
+        fn (value behavior)
 
     let combine (b1 : Behavior<'a>) (b2 : Behavior<'b>) = 
         b2
