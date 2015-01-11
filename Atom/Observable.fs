@@ -23,17 +23,18 @@ type Property<'T> (observable: IObservable<'T>, initial) =
 
     let mutable disposable = None
 
-    member this.Observable = Observable.createWithDisposable (fun subscriber ->
-        key <- key + 1
-        observers <- Map.add key subscriber observers
-        if cached then
-            subscriber.OnNext value
-        match disposable with
-        | Some disposable -> ()
-        | None -> disposable <- Some (observable.Subscribe (onNext, onError, onCompleted))
-        {new IDisposable with
-             member x.Dispose () =
-                 observers <- Map.remove key observers})
+    member this.Observable = 
+        Observable.createWithDisposable (fun subscriber ->
+            key <- key + 1
+            observers <- Map.add key subscriber observers
+            if cached then
+                subscriber.OnNext value
+            match disposable with
+            | Some disposable -> ()
+            | None -> disposable <- Some (observable.Subscribe (onNext, onError, onCompleted))
+            {new IDisposable with
+                 member x.Dispose () =
+                     observers <- Map.remove key observers})
 
     member this.Value
         with get () = value

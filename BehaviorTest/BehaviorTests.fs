@@ -11,28 +11,54 @@ open Nessos.FsPickler.Combinators
 
 open Atom
 
+open Atom.Behaviors
+open Atom.Builders
+
 [<TestFixture>]
 type Test() = 
 
+    let generateTimedInts delay initial final =
+        Observable.generateTimeSpan 
+            initial 
+            (Func<int, bool>(fun i -> i <= final))
+            (Func<int,int>((+) 1)) 
+            id 
+            (fun _ -> TimeSpan (0, 0, delay))
+
     [<Test>]
-    member x.TestCase() = 
+    member x.``The behavior is a function of time.``()= 
 
-        let aggregator = new System.Collections.Generic.List<int*int>()
+        let delay = 1
+        let obs = generateTimedInts delay 0 1
+        let xs = System.Collections.Generic.List<int>()
 
-        let obs = System.Reactive.Linq.Observable.Repeat 0
+        let behavior = returnV obs
 
-        let prop = new Property<int> (obs, 100)
+        System.Threading.Thread.Sleep (delay * 1000)
 
-        obs
-        |> Observable.takeWhile (fun _ -> false)
-        |> Observable.map (fun x -> 
-            aggregator.Add (x, 1)
-            x)
-        |> Observable.take 5
-        |> Observable.subscribe ignore
-        |> ignore
+        for i in [0..1] do
+            xs.Add <| value behavior
+            System.Threading.Thread.Sleep (delay * 1000)
+    
+        printfn "xs: %A" xs
 
-        printfn "aggregator: %A" aggregator
+        xs 
+        |> Seq.toList
+        |> (=) [0..1]
+        |> Assert.IsTrue 
 
-        Assert.IsTrue false
+    [<Test>]
+    member x.``The constant behavior is constant``() =  
 
+        let behavior = returnC 1
+        let xs = System.Collections.Generic.List<int>()
+
+        for i in [0..1] do
+            xs.Add <| value behavior
+        
+        printfn "xs: %A" xs
+
+        xs
+        |> Seq.toList
+        |> (=) [1; 1]
+        |> Assert.IsTrue
