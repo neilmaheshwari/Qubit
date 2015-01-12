@@ -89,3 +89,5 @@ module Builders =
             combine b1 b2
 
         member __.Zero() = failwith "Zero"
+
+    let behaviorB = BehaviorBuilder()

@@ -15,7 +15,7 @@ open Atom.Behaviors
 open Atom.Builders
 
 [<TestFixture>]
-type Test() = 
+type Behaviors() = 
 
     let generateTimedInts delay initial final =
         Observable.generateTimeSpan 
@@ -29,22 +29,20 @@ type Test() =
     member x.The_behavior_is_a_function_of_time()= 
 
         let delay = 1
-        let obs = generateTimedInts delay 0 1
+        let obs = generateTimedInts delay 0 2
         let xs = System.Collections.Generic.List<int>()
 
         let behavior = returnV obs
 
-        System.Threading.Thread.Sleep (delay * 1000)
-
-        for i in [0..1] do
+        for i in [0..2] do
             xs.Add <| value behavior
             System.Threading.Thread.Sleep (delay * 1000)
-    
-        printfn "xs: %A" xs
+            
+        printfn "xs: %A" (xs |> Seq.toList)
 
         xs 
         |> Seq.toList
-        |> (=) [0..1]
+        |> (=) [0..2]
         |> Assert.IsTrue 
 
     [<Test>]
@@ -67,14 +65,14 @@ type Test() =
     member x.Applying_a_function_on_a_time_varying_behavior_works() = 
 
         let delay = 1
-        let obs = generateTimedInts delay 0 1
+        let obs = generateTimedInts delay 0 3
         let xs = System.Collections.Generic.List<int>()
 
         let liftedAddition = Behaviors.fmap ((+) 1)
 
         let behavior = returnV obs |> liftedAddition
 
-        for i in [0..1] do
+        for i in [0..3] do
             xs.Add <| value behavior
             System.Threading.Thread.Sleep (delay * 1000)
     
@@ -82,7 +80,7 @@ type Test() =
 
         xs 
         |> Seq.toList
-        |> (=) [1..2]
+        |> (=) [1..4]
         |> Assert.IsTrue 
 
     [<Test>]
