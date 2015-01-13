@@ -90,3 +90,14 @@ module Builders =
         member __.Zero() = failwith "Zero"
 
     let behaviorB = BehaviorBuilder()
+
+    type BehaviorFmapBuilder() = 
+
+        member __.Bind (b : Behavior<'a>, f: 'a -> Behavior<'b>) =
+            value (Behaviors.fmap f b)
+
+        member __.ReturnFrom (b : Behavior<'T>) = b
+
+        member __.Zero() = failwith "Zero"
+
+    let behaviorFmapBuilder = BehaviorFmapBuilder()

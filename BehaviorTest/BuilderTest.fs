@@ -8,6 +8,7 @@ open FSharp.Control.Reactive
 open System.Reactive.Disposables
 open Nessos.FsPickler
 open Nessos.FsPickler.Combinators
+open System.Reactive.Linq
 
 open Atom
 
@@ -59,7 +60,7 @@ type Builders() =
                 StringField = stringBehavior
                 NestedField = returnC record1Instance
             } 
-        
+
         for i in [1..2] do
             System.Threading.Thread.Sleep (delay * 1000)
             behaviorB {
@@ -77,4 +78,47 @@ type Builders() =
         xs
         |> Seq.toList
         |> (=) [ (109.0, 1, "1"); (109.0, 2, "2") ]
+        |> Assert.IsTrue
+
+    [<Test>]
+    member x.FmapBuilder() = 
+
+        let delay = 1
+        let intObs = 
+            generateTimedInts delay 1 2
+//            |> fun x -> Observable.Do (x, printfn "Publishing: %A")  
+
+        let xs = System.Collections.Generic.List<int>()
+        let floatBehavior = returnC 109.0
+        let stringBehavior = returnC "String"
+        let intBehavior = returnV 0 intObs
+
+        let record1Instance = 
+            { 
+                FloatField = floatBehavior 
+                IntField = intBehavior
+            } 
+
+        let record2Instance = 
+            {
+                StringField = stringBehavior
+                NestedField = returnC record1Instance
+            } 
+
+        let record2 = record2Instance |> returnC
+
+        let n = 
+            behaviorFmapBuilder {
+                let! r = record2
+                let! record1 = r.NestedField
+                return! record1.IntField
+            }
+
+        for i in [1..2] do
+            System.Threading.Thread.Sleep (delay * 1000)
+            xs.Add <| value n
+
+        xs
+        |> Seq.toList
+        |> (=) [1..2]
         |> Assert.IsTrue
