@@ -6,11 +6,7 @@ open NUnit.Framework
 open System.Collections.Generic
 open FSharp.Control.Reactive
 open System.Reactive.Disposables
-open Nessos.FsPickler
-open Nessos.FsPickler.Combinators
 open System.Reactive.Linq
-
-open Atom
 
 open Atom.Behaviors
 open Atom.Builders
@@ -61,7 +57,7 @@ type Builders() =
                 NestedField = returnC record1Instance
             } 
 
-        for i in [1..2] do
+        for j in [1..2] do
             System.Threading.Thread.Sleep (delay * 1000)
             behaviorB {
                 let! n = record2Instance.NestedField
@@ -86,7 +82,6 @@ type Builders() =
         let delay = 1
         let intObs = 
             generateTimedInts delay 1 2
-//            |> fun x -> Observable.Do (x, printfn "Publishing: %A")  
 
         let xs = System.Collections.Generic.List<int>()
         let floatBehavior = returnC 109.0
@@ -99,13 +94,16 @@ type Builders() =
                 IntField = intBehavior
             } 
 
+        let record1Behavior = 
+            returnV record1Instance (Observable.Return record1Instance)
+
         let record2Instance = 
             {
                 StringField = stringBehavior
-                NestedField = returnC record1Instance
+                NestedField = record1Behavior
             } 
 
-        let record2 = record2Instance |> returnC
+        let record2 = returnC record2Instance
 
         let n = 
             behaviorFmapBuilder {
@@ -117,6 +115,8 @@ type Builders() =
         for i in [1..2] do
             System.Threading.Thread.Sleep (delay * 1000)
             xs.Add <| value n
+
+        printfn "XS: %A" xs
 
         xs
         |> Seq.toList

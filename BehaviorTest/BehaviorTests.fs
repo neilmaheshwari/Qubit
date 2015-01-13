@@ -6,11 +6,7 @@ open NUnit.Framework
 open System.Collections.Generic
 open FSharp.Control.Reactive
 open System.Reactive.Disposables
-open Nessos.FsPickler
-open Nessos.FsPickler.Combinators
 open System.Reactive.Linq
-
-open Atom
 
 open Atom.Behaviors
 open Atom.Builders
@@ -73,7 +69,7 @@ type Behaviors() =
         let xs = System.Collections.Generic.List<int>()
         let ys = System.Collections.Generic.List<int>()
 
-        let liftedAddition = Behaviors.fmap ((+) 1)
+        let liftedAddition = fmap <| (+) 1
 
         let behavior1 = returnV 0 obs |> liftedAddition
         let behavior2 = returnV 0 obs
@@ -100,7 +96,7 @@ type Behaviors() =
     member x.Applying_a_function_on_a_constant_behavior_works() = 
 
         let xs = System.Collections.Generic.List<int>()
-        let liftedAddition = Behaviors.fmap ((+) 1)
+        let liftedAddition = fmap <| (+) 1
         let behavior = returnC 1 |> liftedAddition
         for i in [0..1] do
             xs.Add <| value behavior

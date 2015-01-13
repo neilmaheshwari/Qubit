@@ -5,16 +5,36 @@ open System.Collections.Generic
 open FSharp.Control.Reactive
 open System.Reactive.Disposables
 open System.Reactive.Linq
-open Nessos.FsPickler
-open Nessos.FsPickler.Combinators
-open Atom
 
 (*
     http://conal.net/papers/icfp97/icfp97.pdf
 *)
 
-
 module Behaviors =
+
+    type Property<'T> (observable: IObservable<'T>, initial) =
+
+        let mutable value = initial
+
+        let obs = 
+            observable 
+            |> Observable.publish 
+            |> Observable.refCount
+
+        let subDisposable = 
+            obs
+            |> Observable.subscribe (fun v -> value <- v)
+
+        member this.Observable = obs
+
+        member this.Value
+            with get () = value
+
+        interface IDisposable with
+            member this.Dispose () = subDisposable.Dispose()
+
+    let property (initial : 'T) obs =
+        new Property<'T> (obs, initial)
 
     type Behavior<'T> = 
         | Constant of 'T
@@ -50,18 +70,18 @@ module Behaviors =
     let returnC t = Constant t
      
     let returnV initial obs =
-        let property = Observable.property initial obs
-        Varying property
+        property initial obs
+        |> Varying
 
     let fmap f =
         fun b -> 
-            let v = f <| value b
             match b with
-            | Constant _ -> 
-                Constant v
+            | Constant v -> 
+                Constant <| f v
             | Varying _ -> 
+                let newValue = f <| value b
                 let newStream = exposeStream b |> Observable.map f
-                returnV v newStream
+                returnV newValue newStream
 
     let bind (behavior : Behavior<'a>) (fn : ('a -> Behavior<'b>)) : Behavior<'b> =
         fn (value behavior)
@@ -94,8 +114,8 @@ module Builders =
     type BehaviorFmapBuilder() = 
 
         member __.Bind (b : Behavior<'a>, f: 'a -> Behavior<'b>) =
-            value (Behaviors.fmap f b)
-
+            value (Behaviors.fmap f b) //todo
+             
         member __.ReturnFrom (b : Behavior<'T>) = b
 
         member __.Zero() = failwith "Zero"

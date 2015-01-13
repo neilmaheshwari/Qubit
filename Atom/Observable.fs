@@ -7,27 +7,6 @@ open System.Reactive.Disposables
 open Nessos.FsPickler
 open Nessos.FsPickler.Combinators
 
-type Property<'T> (observable: IObservable<'T>, initial) =
-
-    let mutable value = initial
-
-    let obs = 
-        observable 
-        |> Observable.publish 
-        |> Observable.refCount
-
-    let subDisposable = 
-        obs
-        |> Observable.subscribe (fun v -> value <- v)
-
-    member this.Observable = obs
-
-    member this.Value
-        with get () = value
-
-    interface IDisposable with
-        member this.Dispose () = subDisposable.Dispose()
-    
 [<CustomPickler>]
 type RemoteObservable<'T> (channel) =
 
@@ -113,9 +92,6 @@ module Observable =
                 observable
 
     open __
-
-    let property (initial : 'T) obs =
-        new Property<'T> (obs, initial)
 
     let remote channel = (get channel)
 
