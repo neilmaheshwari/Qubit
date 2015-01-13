@@ -40,11 +40,11 @@ type Builders() =
     member x.BehaviorCETest() = 
 
         let delay = 1
-        let intObs = generateTimedInts delay 0 1
+        let intObs = generateTimedInts delay 1 2
         let xs = System.Collections.Generic.List<float*int>()
         let floatBehavior = returnC 109.0
 
-        let intBehavior = returnV intObs
+        let intBehavior = returnV 0 intObs
 
         let record1Instance = 
             { 
@@ -57,7 +57,7 @@ type Builders() =
                 NestedField = returnC record1Instance
             } 
         
-        for i in [0..1] do
+        for i in [1..2] do
             System.Threading.Thread.Sleep (delay * 1000)
             behaviorB {
                 let! n = record2Instance.NestedField
@@ -72,5 +72,5 @@ type Builders() =
 
         xs
         |> Seq.toList
-        |> (=) [ (109.0, 0); (109.0, 1) ]
+        |> (=) [ (109.0, 1); (109.0, 2) ]
         |> Assert.IsTrue

@@ -48,12 +48,10 @@ module Behaviors =
     let exposeStream (b : Behavior<'T>) = b.ExposeStream
 
     let returnC t = Constant t
-
-    let returnV obs = 
-        let property = Observable.property (Observable.First obs) obs
-        let b = Varying property
-        b |> exposeStream |> Observable.subscribe ignore |> ignore
-        b
+     
+    let returnV initial obs =
+        let property = Observable.property initial obs
+        Varying property
 
     let fmap f =
         fun b -> 
@@ -61,8 +59,9 @@ module Behaviors =
             | Constant _ -> 
                 Constant (f (value b))
             | Varying _ -> 
+                let newValue = f (value b)
                 let newStream = exposeStream b |> Observable.map f
-                returnV newStream
+                returnV newValue newStream
 
     let bind (behavior : Behavior<'a>) (fn : ('a -> Behavior<'b>)) : Behavior<'b> =
         fn (value behavior)
