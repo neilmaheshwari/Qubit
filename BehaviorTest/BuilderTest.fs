@@ -1,4 +1,4 @@
-﻿namespace BehaviorBuilderTest
+﻿namespace PropertyBuilderTest
 
 open System
 open NUnit.Framework
@@ -8,19 +8,19 @@ open FSharp.Control.Reactive
 open System.Reactive.Disposables
 open System.Reactive.Linq
 
-open Atom.Behaviors
+open Atom.Property
 open Atom.Builders
 
 type Record1 = 
     {
-        FloatField : Behavior<float>
-        IntField : Behavior<int>
+        FloatField : Property<float>
+        IntField : Property<int>
     }
 
 type Record2 = 
     {
-        NestedField : Behavior<Record1>
-        StringField : Behavior<string>
+        NestedField : Property<Record1>
+        StringField : Property<string>
     }
 
 [<TestFixture>]
@@ -35,25 +35,25 @@ type Builders() =
             (fun _ -> TimeSpan (0, 0, delay))
 
     [<Test>]
-    member x.BehaviorCETest() = 
+    member x.PropertyCETest() = 
 
         let delay = 1
         let intObs = generateTimedInts delay 1 2
         let stringObs = intObs |> Observable.map (fun x -> x.ToString())
         let xs = System.Collections.Generic.List<float*int*string>()
-        let floatBehavior = returnC 109.0
-        let stringBehavior = returnV "0" stringObs
-        let intBehavior = returnV 0 intObs
+        let floatProperty = returnC 109.0
+        let stringProperty = returnV "0" stringObs
+        let intProperty = returnV 0 intObs
 
         let record1Instance = 
             { 
-                FloatField = floatBehavior 
-                IntField = intBehavior
+                FloatField = floatProperty 
+                IntField = intProperty
             } 
 
         let record2Instance = 
             {
-                StringField = stringBehavior
+                StringField = stringProperty
                 NestedField = returnC record1Instance
             } 
 
@@ -84,23 +84,23 @@ type Builders() =
             generateTimedInts delay 1 2
 
         let xs = System.Collections.Generic.List<int>()
-        let floatBehavior = returnC 109.0
-        let stringBehavior = returnC "String"
-        let intBehavior = returnV 0 intObs
+        let floatProperty = returnC 109.0
+        let stringProperty = returnC "String"
+        let intProperty = returnV 0 intObs
 
         let record1Instance = 
             { 
-                FloatField = floatBehavior 
-                IntField = intBehavior
+                FloatField = floatProperty 
+                IntField = intProperty
             } 
 
-        let record1Behavior = 
+        let record1Property = 
             returnV record1Instance (Observable.Return record1Instance)
 
         let record2Instance = 
             {
-                StringField = stringBehavior
-                NestedField = record1Behavior
+                StringField = stringProperty
+                NestedField = record1Property
             } 
 
         let record2 = returnC record2Instance

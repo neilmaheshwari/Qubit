@@ -46,7 +46,7 @@ let actor view proj =
         Axon.observe DeltaTimeEvent
         |> Observable.map (fun dt -> Matrix4.CreateRotationY dt)
 
-    let model = animation |> Behaviors.property Matrix4.Identity
+    let model = animation |> Property.property Matrix4.Identity
 
     model.Observable
     |> Observable.add (fun _ -> ())

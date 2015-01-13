@@ -10,9 +10,9 @@ open System.Reactive.Linq
     http://conal.net/papers/icfp97/icfp97.pdf
 *)
 
-module Behaviors =
+module Property =
 
-    type Property<'T> (observable: IObservable<'T>, initial) =
+    type CoreProperty<'T> (observable: IObservable<'T>, initial) =
 
         let mutable value = initial
 
@@ -34,11 +34,12 @@ module Behaviors =
             member this.Dispose () = subDisposable.Dispose()
 
     let property (initial : 'T) obs =
-        new Property<'T> (obs, initial)
+        new CoreProperty<'T> (obs, initial)
 
-    type Behavior<'T> = 
+    type Property<'T> = 
+        private
         | Constant of 'T
-        | Varying of Property<'T>
+        | Varying of CoreProperty<'T>
          
         member x.Value = 
             match x with
@@ -59,13 +60,13 @@ module Behaviors =
             | Constant t -> Observable.Repeat t
             | Varying property -> property.Observable
 
-    let value (b : Behavior<'T>) = b.Value
+    let value (b : Property<'T>) = b.Value
 
-    let onNextWith f (b : Behavior<'T>) = b.OnNextWith f
+    let onNextWith f (b : Property<'T>) = b.OnNextWith f
 
     let onNext b = onNextWith (fun _ -> true) b
 
-    let exposeStream (b : Behavior<'T>) = b.ExposeStream
+    let exposeStream (b : Property<'T>) = b.ExposeStream
 
     let returnC t = Constant t
      
@@ -83,41 +84,41 @@ module Behaviors =
                 let newStream = exposeStream b |> Observable.map f
                 returnV newValue newStream
 
-    let bind (behavior : Behavior<'a>) (fn : ('a -> Behavior<'b>)) : Behavior<'b> =
+    let bind (behavior : Property<'a>) (fn : ('a -> Property<'b>)) : Property<'b> =
         fn (value behavior)
 
-    let combine (b1 : Behavior<'a>) (b2 : Behavior<'b>) = 
+    let combine (b1 : Property<'a>) (b2 : Property<'b>) = 
         b2
 
     let inline (>>=) b f = bind b f
 
 module Builders =
 
-    open Behaviors
+    open Property
 
-    type BehaviorBuilder() = 
+    type PropertyBuilder() = 
 
         member __.Return b = returnC b
 
-        member __.ReturnFrom (b : Behavior<'T>) = b
+        member __.ReturnFrom (b : Property<'T>) = b
 
-        member __.Bind (b : Behavior<'a>, f : ('a -> Behavior<'b>)) =
+        member __.Bind (b : Property<'a>, f : ('a -> Property<'b>)) =
             b >>= f
 
-        member __.Combine (b1 : Behavior<'a>, b2 : Behavior<'b>) = 
+        member __.Combine (b1 : Property<'a>, b2 : Property<'b>) = 
             combine b1 b2
 
         member __.Zero() = failwith "Zero"
 
-    let behaviorB = BehaviorBuilder()
+    let behaviorB = PropertyBuilder()
 
-    type BehaviorFmapBuilder() = 
+    type PropertyFmapBuilder() = 
 
-        member __.Bind (b : Behavior<'a>, f: 'a -> Behavior<'b>) =
-            value (Behaviors.fmap f b) //todo
+        member __.Bind (b : Property<'a>, f: 'a -> Property<'b>) =
+            value (Property.fmap f b) //todo
              
-        member __.ReturnFrom (b : Behavior<'T>) = b
+        member __.ReturnFrom (b : Property<'T>) = b
 
         member __.Zero() = failwith "Zero"
 
-    let behaviorFmapBuilder = BehaviorFmapBuilder()
+    let behaviorFmapBuilder = PropertyFmapBuilder()

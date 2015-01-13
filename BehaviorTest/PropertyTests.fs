@@ -1,4 +1,4 @@
-﻿namespace BehaviorTest
+﻿namespace PropertyTest
 
 open System
 open NUnit.Framework
@@ -8,11 +8,11 @@ open FSharp.Control.Reactive
 open System.Reactive.Disposables
 open System.Reactive.Linq
 
-open Atom.Behaviors
+open Atom.Property
 open Atom.Builders
 
 [<TestFixture>]
-type Behaviors() = 
+type Properties() = 
 
     let generateTimedInts delay initial final =
         Observable.generateTimeSpan 

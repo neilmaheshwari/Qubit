@@ -17,7 +17,7 @@ Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "GenericTests", "GenericTest
 EndProject
 Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "Trash", "Trash\Trash.fsproj", "{176C4207-9B63-4DA1-91B8-CF00DBB7AC56}"
 EndProject
-Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "BehaviorTest", "BehaviorTest\BehaviorTest.fsproj", "{E2402B8D-4F5C-479A-8AD7-EBEB4E1485F9}"
+Project("{f2a71f9b-5d33-465a-a702-920d77279786}") = "PropertyTest", "BehaviorTest\PropertyTest.fsproj", "{E2402B8D-4F5C-479A-8AD7-EBEB4E1485F9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
