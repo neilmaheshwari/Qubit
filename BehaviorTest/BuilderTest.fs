@@ -23,6 +23,7 @@ type Record1 =
 type Record2 = 
     {
         NestedField : Behavior<Record1>
+        StringField : Behavior<string>
     }
 
 [<TestFixture>]
@@ -41,9 +42,10 @@ type Builders() =
 
         let delay = 1
         let intObs = generateTimedInts delay 1 2
+        let stringObs = intObs |> Observable.map (fun x -> x.ToString())
         let xs = System.Collections.Generic.List<float*int>()
         let floatBehavior = returnC 109.0
-
+        let stringBehavior = returnV "0" stringObs
         let intBehavior = returnV 0 intObs
 
         let record1Instance = 
@@ -54,6 +56,7 @@ type Builders() =
 
         let record2Instance = 
             {
+                StringField = stringBehavior
                 NestedField = returnC record1Instance
             } 
         

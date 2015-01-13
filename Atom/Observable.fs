@@ -10,41 +10,23 @@ open Nessos.FsPickler.Combinators
 type Property<'T> (observable: IObservable<'T>, initial) =
 
     let mutable value = initial
-    let mutable key = 0
-    let mutable observers = Map.empty : Map<int,IObserver<'T>>
 
-    let refCountObservable = 
+    let obs = 
         observable 
         |> Observable.publish 
         |> Observable.refCount
 
-    let onNext (v) =
-        value <- v
-        observers |> Seq.iter (fun (KeyValue(_,obs)) -> obs.OnNext v)
+    let subDisposable = 
+        obs
+        |> Observable.subscribe (fun v -> value <- v)
 
-    let onCompleted () = observers |> Seq.iter (fun (KeyValue(_,obs)) -> obs.OnCompleted ())
-    let onError (err) = observers |> Seq.iter (fun (KeyValue(_,obs)) -> obs.OnError err)
-
-    let mainSubscription = 
-        refCountObservable.Subscribe (onNext, onError, onCompleted)
-
-    member this.Observable =
-        Observable.createWithDisposable (fun subscriber ->
-            key <- key + 1
-            observers <- Map.add key subscriber observers
-            subscriber.OnNext value                   
-            {new IDisposable with
-                 member x.Dispose () =
-                     observers <- Map.remove key observers})
+    member this.Observable = obs
 
     member this.Value
         with get () = value
 
     interface IDisposable with
-        member this.Dispose () =
-            onCompleted ()
-            observers <- Map.empty
-            mainSubscription.Dispose()
+        member this.Dispose () = subDisposable.Dispose()
     
 [<CustomPickler>]
 type RemoteObservable<'T> (channel) =

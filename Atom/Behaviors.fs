@@ -55,13 +55,13 @@ module Behaviors =
 
     let fmap f =
         fun b -> 
+            let v = f <| value b
             match b with
             | Constant _ -> 
-                Constant (f (value b))
+                Constant v
             | Varying _ -> 
-                let newValue = f (value b)
                 let newStream = exposeStream b |> Observable.map f
-                returnV newValue newStream
+                returnV v newStream
 
     let bind (behavior : Behavior<'a>) (fn : ('a -> Behavior<'b>)) : Behavior<'b> =
         fn (value behavior)
