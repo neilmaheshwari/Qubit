@@ -43,7 +43,7 @@ type Builders() =
         let delay = 1
         let intObs = generateTimedInts delay 1 2
         let stringObs = intObs |> Observable.map (fun x -> x.ToString())
-        let xs = System.Collections.Generic.List<float*int>()
+        let xs = System.Collections.Generic.List<float*int*string>()
         let floatBehavior = returnC 109.0
         let stringBehavior = returnV "0" stringObs
         let intBehavior = returnV 0 intObs
@@ -66,7 +66,8 @@ type Builders() =
                 let! n = record2Instance.NestedField
                 let! f = n.FloatField
                 let! i = n.IntField
-                return (f, i)
+                let! s = record2Instance.StringField
+                return (f, i, s)
             }
             |> value
             |> xs.Add
@@ -75,5 +76,5 @@ type Builders() =
 
         xs
         |> Seq.toList
-        |> (=) [ (109.0, 1); (109.0, 2) ]
+        |> (=) [ (109.0, 1, "1"); (109.0, 2, "2") ]
         |> Assert.IsTrue
