@@ -7,6 +7,7 @@ open System.Collections.Generic
 open FSharp.Control.Reactive
 open System.Reactive.Disposables
 open System.Reactive.Linq
+open Microsoft.Reactive.Testing
 
 open Atom.Property
 open Atom.Builders
@@ -34,11 +35,18 @@ type Builders() =
             id 
             (fun _ -> TimeSpan (0, 0, delay))
 
+    let generateFast (scheduler : TestScheduler) delayTicks initial final= 
+        Observable.Interval(TimeSpan.FromTicks delayTicks, scheduler)
+        |> Observable.map (int)
+        |> Observable.map ((+) initial)
+        |> Observable.take final
+
     [<Test>]
     member x.PropertyCETest() = 
 
-        let delay = 1
-        let intObs = generateTimedInts delay 1 2
+        let delay = (int64) 1
+        let scheduler = new TestScheduler()
+        let intObs = generateFast scheduler delay 1 2
         let stringObs = intObs |> Observable.map (fun x -> x.ToString())
         let xs = System.Collections.Generic.List<float*int*string>()
         let floatProperty = returnC 109.0
@@ -58,7 +66,7 @@ type Builders() =
             } 
 
         for j in [1..2] do
-            System.Threading.Thread.Sleep (delay * 1000)
+            scheduler.AdvanceBy delay
             propertyB {
                 let! n = record2Instance.NestedField
                 let! f = n.FloatField
@@ -79,9 +87,9 @@ type Builders() =
     [<Test>]
     member x.FmapBuilder() = 
 
-        let delay = 1
-        let intObs = 
-            generateTimedInts delay 1 2
+        let delay = (int64) 1
+        let scheduler = new TestScheduler()
+        let intObs = generateFast scheduler delay 1 2
 
         let xs = System.Collections.Generic.List<int>()
         let floatProperty = returnC 109.0
@@ -113,7 +121,7 @@ type Builders() =
             }
 
         for i in [1..2] do
-            System.Threading.Thread.Sleep (delay * 1000)
+            scheduler.AdvanceBy delay
             xs.Add <| value n
 
         printfn "XS: %A" xs
