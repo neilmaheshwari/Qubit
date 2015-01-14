@@ -8,50 +8,30 @@ open FSharp.Control.Reactive
 open System.Reactive.Disposables
 open System.Reactive.Linq
 open System.Reactive.Concurrency
-
 open Atom.Property
 open Atom.Builders
-
 open Microsoft.Reactive.Testing
+open PropertyTest.TestUtility
+
 
 [<TestFixture>]
 type Properties() = 
-
-    let generateTimedInts delay initial final =
-        Observable.generateTimeSpan 
-            initial 
-            (Func<int, bool>(fun i -> i <= final))
-            (Func<int,int>((+) 1)) 
-            id 
-            (fun _ -> TimeSpan (0, 0, delay))
-
-    let generateFast (scheduler : TestScheduler) delayTicks initial final= 
-        Observable.Interval(TimeSpan.FromTicks delayTicks, scheduler)
-        |> Observable.map (int)
-        |> Observable.map ((+) initial)
-        |> Observable.take final
 
     [<Test>]
     member x.The_property_is_a_function_of_time()= 
 
         let scheduler = new TestScheduler()
         let delay = (int64) 1
-        let obs = generateFast scheduler delay 10 11
+        let obs = generateScheduledInts scheduler delay 10 11
         let xs = System.Collections.Generic.List<int>()
 
         let property = returnV 9 obs
 
-        for i in [9..11] do
-            printfn "Value: %A" (value property)
-            xs.Add <| value property
-            scheduler.AdvanceBy delay
-            
-        printfn "xs: %A" (xs |> Seq.toList)
+        let fn _ = xs.Add <| value property
 
-        xs 
-        |> Seq.toList
-        |> (=) [9..11]
-        |> Assert.IsTrue 
+        loopWithScheduler scheduler [1..2] delay fn
+            
+        xs |> ``should equal list`` [10..11]
 
     [<Test>]
     member x.The_constant_property_is_constant() =  
@@ -59,22 +39,18 @@ type Properties() =
         let property = returnC 1
         let xs = System.Collections.Generic.List<int>()
 
-        for i in [0..1] do
-            xs.Add <| value property
-        
-        printfn "xs: %A" xs
+        let fn _ = xs.Add <| value property
 
-        xs
-        |> Seq.toList
-        |> (=) [1; 1]
-        |> Assert.IsTrue
+        loopWithScheduler (new TestScheduler()) [0..1] (int64 0) fn 
+
+        xs |> ``should equal list`` [1; 1]
 
     [<Test>]
     member x.Applying_a_function_on_a_time_varying_property_works() = 
 
         let scheduler = new TestScheduler()
         let delay = (int64) 1
-        let obs = generateFast scheduler delay 1 3
+        let obs = generateScheduledInts scheduler delay 1 3
         let xs = System.Collections.Generic.List<int>()
         let ys = System.Collections.Generic.List<int>()
 
@@ -83,11 +59,12 @@ type Properties() =
         let property1 = returnV 0 obs |> liftedAddition
         let property2 = returnV 0 obs
 
-        for i in [1..3] do
+        let fn _ = 
             ys.Add <| value property2
             xs.Add <| value property1
-            scheduler.AdvanceBy delay
-    
+
+        loopWithScheduler scheduler [1..3] delay fn
+
         printfn "xs: %A" (xs |> Seq.toList)
         printfn "ys: %A" (ys |> Seq.toList)
 
@@ -107,34 +84,25 @@ type Properties() =
         let xs = System.Collections.Generic.List<int>()
         let liftedAddition = fmap <| (+) 1
         let property = returnC 1 |> liftedAddition
-        for i in [0..1] do
-            xs.Add <| value property
-        
+
+        let fn _ = xs.Add <| value property
+
+        loopWithScheduler (new TestScheduler()) [0..1] (int64 0) fn
+
         printfn "xs: %A" xs
 
-        xs
-        |> Seq.toList
-        |> (=) [2; 2]
-        |> Assert.IsTrue
+        xs |> ``should equal list`` [2; 2]
 
     [<Test>]
     member x.Exposing_underlying_observables_works_for_constant() = 
 
         let xs = System.Collections.Generic.List<int>()
-
         let p = returnC 123
+        let obs = exposeStream p
+        let sub = Observable.subscribe xs.Add obs
+        sub.Dispose()
 
-        let obs = 
-            p
-            |> exposeStream
-
-        printfn "Obs: %A" obs
-
-        obs
-        |> Observable.subscribe xs.Add
-        |> ignore
-
-        Assert.IsTrue (xs |> Seq.toList |> (=) [123])
+        xs |> ``should equal list`` [123]
 
     [<Test>]
     member x.Exposing_underlying_observable_works_for_varying () = 
@@ -143,36 +111,25 @@ type Properties() =
         let ys = System.Collections.Generic.List<int>()
 
         let scheduler = new TestScheduler()
-        let delay = (int64) 1
+        let delay = int64 1
         let obs = 
-            generateFast scheduler delay 1 2
+            generateScheduledInts scheduler delay 1 2
             |> fun x -> 
                 Observable.Do (x, fun o ->
                     ys.Add o)
         
         let p = returnV 0 obs
 
-        let exposedStream = 
-            p 
-            |> exposeStream
+        let exposedStream = exposeStream p
+        let sub1 = Observable.subscribe xs.Add exposedStream
+        let sub2 = Observable.subscribe ignore exposedStream
 
-        let sub1 = 
-            exposedStream
-            |> Observable.subscribe xs.Add
-                
-        let sub2 = 
-            exposedStream
-            |> Observable.subscribe (fun y ->
-                printfn "Sub2: %A" y)
+        loopWithScheduler scheduler [0..1] delay ignore
 
-        scheduler.AdvanceBy (((int64) 2) * delay)
+        sub1.Dispose ()
+        sub2.Dispose ()
 
-        let xs' = xs |> Seq.toList
-
-        let ys' = ys |> Seq.toList
-
-        ys' = xs'
-        |> Assert.IsTrue
+        xs |> ``should equal list`` (Seq.toList ys)
 
 //    [<Test>]
 //    member x.HotObservables () =
