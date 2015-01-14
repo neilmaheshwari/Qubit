@@ -7,6 +7,7 @@ open System.Collections.Generic
 open FSharp.Control.Reactive
 open System.Reactive.Disposables
 open System.Reactive.Linq
+open System.Reactive.Concurrency
 
 open Atom.Property
 open Atom.Builders
@@ -165,48 +166,48 @@ type Properties() =
         ys' = xs'
         |> Assert.IsTrue
 
-//    [<Test>]
-//    member x.HotObservables () =
-//
-//        let xs = System.Collections.Generic.List<int64>()
-//
-//        let obs = 
-//            TimeSpan.FromSeconds 1.0
-//            |> Observable.interval
-//            |> fun x -> Observable.Do (x, fun i -> printfn "Publishing: %A" i)
-//            |> Observable.publish
-//                 
-//        let refCountObservables = 
-//            obs
-//            |> Observable.refCount
-//
-//        System.Threading.Thread.Sleep 1100
-//
-//        let obsConnection = refCountObservables |> Observable.subscribe (printfn "Sub 1: %A")
-//        let obsConnection2 = refCountObservables |> Observable.subscribe (printfn "Sub 2: %A")
-//
-//        System.Threading.Thread.Sleep 5000
-//
+    [<Test>]
+    member x.HotObservables () =
+
+        let xs = System.Collections.Generic.List<int64>()
+
+        let obs = 
+            TimeSpan.FromSeconds 1.0
+            |> Observable.interval
+            |> fun x -> Observable.Do (x, fun i -> printfn "Publishing: %A" i)
+                 
+        let refCountObservables = 
+            obs
+            |> fun x -> x.Replay 1
+            |> Observable.refCount
+
+        System.Threading.Thread.Sleep 1100
+
+        let obsConnection = refCountObservables |> Observable.subscribe (printfn "Sub 1: %A")
+        let obsConnection2 = refCountObservables |> Observable.subscribe (printfn "Sub 2: %A")
+
+        System.Threading.Thread.Sleep 5000
+
 //        let obsConnection3 = refCountObservables |> Observable.subscribe (printfn "Sub 3: %A")
 //        let obsConnection4 = refCountObservables |> Observable.subscribe (printfn "Sub 4: %A")
-//
-//        System.Threading.Thread.Sleep 2000
-//
-//        obsConnection.Dispose()
-//        obsConnection2.Dispose()
+
+        System.Threading.Thread.Sleep 2000
+
+        obsConnection.Dispose()
+        obsConnection2.Dispose()
 //        obsConnection3.Dispose()
 //        obsConnection4.Dispose()
-//
-//        System.Threading.Thread.Sleep 2000
-//
-//        let obsConnection5 = refCountObservables |> Observable.subscribe (printfn "Sub 5: %A")
-//
-//        System.Threading.Thread.Sleep 2000
-//
-//        obsConnection5.Dispose()
-//
-//        xs
-//        |> Seq.toList
-//        |> List.map (fun i -> int i)
-//        |> (=) [1..2]
-//        |> Assert.IsTrue 
+
+        System.Threading.Thread.Sleep 2000
+
+        let obsConnection5 = refCountObservables |> Observable.subscribe (printfn "Sub 5: %A")
+
+        System.Threading.Thread.Sleep 2000
+
+        obsConnection5.Dispose()
+
+        xs
+        |> Seq.toList
+        |> List.map (fun i -> int i)
+        |> (=) [1..2]
+        |> Assert.IsTrue 

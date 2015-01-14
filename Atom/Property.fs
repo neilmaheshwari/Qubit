@@ -18,7 +18,7 @@ module Property =
 
         let obs = 
             observable 
-            |> Observable.publish 
+            |> fun x -> x.Replay 1 
             |> Observable.refCount
 
         let subDisposable = 
