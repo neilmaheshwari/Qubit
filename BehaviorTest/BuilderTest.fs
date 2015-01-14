@@ -59,7 +59,7 @@ type Builders() =
 
         for j in [1..2] do
             System.Threading.Thread.Sleep (delay * 1000)
-            behaviorB {
+            propertyB {
                 let! n = record2Instance.NestedField
                 let! f = n.FloatField
                 let! i = n.IntField
@@ -106,7 +106,7 @@ type Builders() =
         let record2 = returnC record2Instance
 
         let n = 
-            behaviorFmapBuilder {
+            propertyFmapBuilder {
                 let! r = record2
                 let! record1 = r.NestedField
                 return! record1.IntField

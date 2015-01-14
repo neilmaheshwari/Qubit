@@ -37,7 +37,7 @@
     <Compile Include="Axon.fs" />
     <Compile Include="Util.fs" />
     <Compile Include="Observable.fs" />
-    <Compile Include="Behaviors.fs" />
+    <Compile Include="Property.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.FSharp.targets" />
   <ItemGroup>

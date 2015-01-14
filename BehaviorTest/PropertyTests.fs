@@ -23,7 +23,7 @@ type Properties() =
             (fun _ -> TimeSpan (0, 0, delay))
 
     [<Test>]
-    member x.The_behavior_is_a_function_of_time()= 
+    member x.The_property_is_a_function_of_time()= 
 
         let delay = 1
         let obs = generateTimedInts delay 10 11
@@ -31,11 +31,11 @@ type Properties() =
                       printfn "Publishing %A" i)
         let xs = System.Collections.Generic.List<int>()
 
-        let behavior = returnV 9 obs
+        let property = returnV 9 obs
 
         for i in [9..11] do
-            printfn "Value: %A" (value behavior)
-            xs.Add <| value behavior
+            printfn "Value: %A" (value property)
+            xs.Add <| value property
             System.Threading.Thread.Sleep (delay * 1000)
             
         printfn "xs: %A" (xs |> Seq.toList)
@@ -46,13 +46,13 @@ type Properties() =
         |> Assert.IsTrue 
 
     [<Test>]
-    member x.The_constant_behavior_is_constant() =  
+    member x.The_constant_property_is_constant() =  
 
-        let behavior = returnC 1
+        let property = returnC 1
         let xs = System.Collections.Generic.List<int>()
 
         for i in [0..1] do
-            xs.Add <| value behavior
+            xs.Add <| value property
         
         printfn "xs: %A" xs
 
@@ -62,7 +62,7 @@ type Properties() =
         |> Assert.IsTrue
 
     [<Test>]
-    member x.Applying_a_function_on_a_time_varying_behavior_works() = 
+    member x.Applying_a_function_on_a_time_varying_property_works() = 
 
         let delay = 1
         let obs = generateTimedInts delay 1 3
@@ -71,12 +71,12 @@ type Properties() =
 
         let liftedAddition = fmap <| (+) 1
 
-        let behavior1 = returnV 0 obs |> liftedAddition
-        let behavior2 = returnV 0 obs
+        let property1 = returnV 0 obs |> liftedAddition
+        let property2 = returnV 0 obs
 
         for i in [1..3] do
-            ys.Add <| value behavior2
-            xs.Add <| value behavior1
+            ys.Add <| value property2
+            xs.Add <| value property1
             System.Threading.Thread.Sleep (delay * 1000)
     
         printfn "xs: %A" (xs |> Seq.toList)
@@ -93,19 +93,76 @@ type Properties() =
 
 
     [<Test>]
-    member x.Applying_a_function_on_a_constant_behavior_works() = 
+    member x.Applying_a_function_on_a_constant_property_works() = 
 
         let xs = System.Collections.Generic.List<int>()
         let liftedAddition = fmap <| (+) 1
-        let behavior = returnC 1 |> liftedAddition
+        let property = returnC 1 |> liftedAddition
         for i in [0..1] do
-            xs.Add <| value behavior
+            xs.Add <| value property
         
         printfn "xs: %A" xs
 
         xs
         |> Seq.toList
         |> (=) [2; 2]
+        |> Assert.IsTrue
+
+    [<Test>]
+    member x.Exposing_underlying_observables_works_for_constant() = 
+
+        let xs = System.Collections.Generic.List<int>()
+
+        let p = returnC 123
+
+        let obs = 
+            p
+            |> exposeStream
+
+        printfn "Obs: %A" obs
+
+        obs
+        |> Observable.subscribe xs.Add
+        |> ignore
+
+        Assert.IsTrue (xs |> Seq.toList |> (=) [123])
+
+    [<Test>]
+    member x.Exposing_underlying_observable_works_for_varying () = 
+
+        let delay = 1
+
+        let xs = System.Collections.Generic.List<int>()
+        let ys = System.Collections.Generic.List<int>()
+
+        let obs = 
+            generateTimedInts delay 1 2
+            |> fun x -> Observable.Do (x, fun o ->
+                ys.Add o
+                printfn "Publishing: %A" o)
+
+        let p = returnV 0 obs
+
+        let exposedStream = 
+            p 
+            |> exposeStream
+
+        let sub1 = 
+            exposedStream
+            |> Observable.subscribe xs.Add
+                
+        let sub2 = 
+            exposedStream
+            |> Observable.subscribe (fun y ->
+                printfn "Sub2: %A" y)
+
+        System.Threading.Thread.Sleep (2 * 1000)
+
+        let xs' = xs |> Seq.toList
+
+        let ys' = ys |> Seq.toList
+
+        ys' = xs'
         |> Assert.IsTrue
 
 //    [<Test>]
