@@ -25,11 +25,11 @@ open Microsoft.Reactive.Testing
                 StringField : Property<string>
             }
 
-        let generateScheduledInts scheduler delayTicks initial final= 
+        let generateScheduledInts scheduler delayTicks initial final = 
             Observable.Interval(TimeSpan.FromTicks delayTicks, scheduler)
             |> Observable.map int
             |> Observable.map ((+) initial)
-            |> Observable.take final
+            |> Observable.take ((final + 1) - initial)
 
         let ``should equal list`` ys xs = 
 

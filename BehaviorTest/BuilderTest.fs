@@ -54,44 +54,44 @@ type Builders() =
 
         xs |> ``should equal list`` [ (109.0, 1, "1"); (109.0, 2, "2") ]
 
-    [<Test>]
-    member x.FmapBuilder() = 
-
-        let delay = int64 1
-        let scheduler = new TestScheduler()
-        let intObs = generateScheduledInts scheduler delay 1 2
-
-        let xs = System.Collections.Generic.List<int>()
-        let floatProperty = returnC 109.0
-        let stringProperty = returnC "String"
-        let intProperty = returnV 0 intObs
-
-        let record1Instance = 
-            { 
-                FloatField = floatProperty 
-                IntField = intProperty
-            } 
-
-        let record1Property = 
-            returnV record1Instance (Observable.Return record1Instance)
-
-        let record2Instance = 
-            {
-                StringField = stringProperty
-                NestedField = record1Property
-            } 
-
-        let record2 = returnC record2Instance
-
-        let n = 
-            propertyFmapBuilder {
-                let! r = record2
-                let! record1 = r.NestedField
-                return! record1.IntField
-            }
-
-        let fn _ = xs.Add <| value n
-            
-        loopWithScheduler scheduler [1..2] delay fn
-
-        xs |> ``should equal list`` [1..2]
+//    [<Test>]
+//    member x.FmapBuilder() = 
+//
+//        let delay = int64 1
+//        let scheduler = new TestScheduler()
+//        let intObs = generateScheduledInts scheduler delay 1 2
+//
+//        let xs = System.Collections.Generic.List<int>()
+//        let floatProperty = returnC 109.0
+//        let stringProperty = returnC "String"
+//        let intProperty = returnV 0 intObs
+//
+//        let record1Instance = 
+//            { 
+//                FloatField = floatProperty 
+//                IntField = intProperty
+//            } 
+//
+//        let record1Property = 
+//            returnV record1Instance (Observable.Return record1Instance)
+//
+//        let record2Instance = 
+//            {
+//                StringField = stringProperty
+//                NestedField = record1Property
+//            } 
+//
+//        let record2 = returnC record2Instance
+//
+//        let n = 
+//            propertyB{
+//                let! r = record2
+//                let! record1 = r.NestedField
+//                return! record1.IntField
+//            }
+//
+//        let fn _ = xs.Add <| value n
+//            
+//        loopWithScheduler scheduler [1..2] delay fn
+//
+//        xs |> ``should equal list`` [1..2]
