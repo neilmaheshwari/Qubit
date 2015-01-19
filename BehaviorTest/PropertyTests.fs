@@ -166,12 +166,12 @@ type Properties() =
                         if x > 0 then
                             {
                                 FloatField = constantFloats
-                                IntField = returnV 99 (streamFrom100 |> Observable.takeUntilOther y) 
+                                IntField = returnV 99 (streamFrom100 |> Observable.takeUntilOther (y |> Observable.skip 1)) 
                             }
                         else
                             {
                                 FloatField = constantFloats
-                                IntField = returnV 0 (streamFrom0 |> Observable.takeUntilOther y)
+                                IntField = returnV 0 (streamFrom0 |> Observable.takeUntilOther (y |> Observable.skip 1))
                             }
                     {
                         StringField = returnC <| string x
