@@ -131,80 +131,81 @@ type Properties() =
 
         xs |> ``should equal list`` (Seq.toList ys)
 
-//    [<Test>]
-//    member x.NestedObservableStreams () = 
-//
-//        let delay = int64 1
-//        let scheduler = new TestScheduler()
-//
-//        let streamFrom100 = 
-//            generateScheduledInts scheduler delay 101 200
-//
-//        let streamFrom0 = 
-//            generateScheduledInts scheduler delay 1 100
-//
-//        let constantFloats = returnC -1.0
-//
-//        let constantString = returnC "$$$"
-//
-//        let obsStream = 
-//            generateScheduledInts scheduler ((int64 5) * delay) 0 100
-//            |> Observable.map (
-//                fun x -> 
-//                    let nested = 
-//                        if x > 3 then
-//                            {
-//                                FloatField = constantFloats
-//                                IntField = returnV 99 streamFrom100
-//                            }
-//                        else
-//                            {
-//                                FloatField = constantFloats
-//                                IntField = returnV 0 streamFrom0
-//                            }
-//                    {
-//                        StringField = returnC <| string x
-//                        NestedField = returnC nested
-//
-//                    })
-//            |> fun x -> Observable.Do (x, fun o -> 
-//                printfn "--------------------"
-//                printfn "Published: %A" (value o.StringField)
-//                printfn "--------------------")
+    [<Test>]
+    member x.NestedObservableStreams () = 
 
-//        let initial =
-//            {
-//                StringField = returnC "Initial string"
-//                NestedField = 
-//                    {
-//                        FloatField = returnC 888.0
-//                        IntField = returnC 999
-//                    }
-//                    |> returnC
-//            }
-//
-//        let record2 = returnV initial obsStream
-//
-//        scheduler.AdvanceBy <| int64 0
-//
-//
-//        let xs = System.Collections.Generic.List<int>()
-//
-//        let fn _ =
-//            let n = 
-//                propertyFmapBuilder {
-//                    let! r = record2
-//                    let! record1 = r.NestedField
-//                    return! record1.IntField
-//                }
-//            xs.Add <| value n
-//
-//        loopWithScheduler scheduler [1..50] delay fn                            
-//
-//        printfn "%A" (xs |> Seq.toList)
-//
-//        Assert.Fail()
-//
+        let delay = int64 1
+        let scheduler = new TestScheduler()
+
+        let streamFrom100 = 
+            generateScheduledInts scheduler delay 101 200
+            |> fun x -> Observable.Do (x, printfn "StreamFrom100 pushed value: %A")
+
+        let streamFrom0 = 
+            generateScheduledInts scheduler delay 1 100
+            |> fun x -> Observable.Do (x, printfn "StreamFrom0 pushed value: %A")
+
+        let constantFloats = returnC -1.0
+
+        let constantString = returnC "$$$"
+
+        let obsStream = 
+            let y = generateScheduledInts scheduler ((int64 5) * delay) 0 100
+            y
+            |> Observable.map (
+                fun x -> 
+                    let nested = 
+                        if x > 0 then
+                            {
+                                FloatField = constantFloats
+                                IntField = returnV 99 ((streamFrom100) |> Observable.takeUntilOther y) 
+                            }
+                        else
+                            {
+                                FloatField = constantFloats
+                                IntField = returnV 0 ((streamFrom0) |> Observable.takeUntilOther y)
+                            }
+                    {
+                        StringField = returnC <| string x
+                        NestedField = returnC nested
+
+                    })
+            |> fun x -> Observable.Do (x, fun o -> 
+                printfn "--------------------"
+                printfn "Published: %A" (value o.StringField)
+                printfn "--------------------")
+
+        let initial =
+            {
+                StringField = returnC "Initial string"
+                NestedField = 
+                    {
+                        FloatField = returnC 888.0
+                        IntField = returnC 999
+                    }
+                    |> returnC
+            }
+
+        let record2 = returnV initial obsStream
+
+        let xs = System.Collections.Generic.List<int>()
+
+        let fn _ =
+            let n = 
+                propertyB {
+                    let! r = record2
+                    let! record1 = r.NestedField
+                    return! record1.IntField
+                }
+            printfn "Builder has value : %A" (value n)
+            xs.Add <| value n
+
+        loopWithScheduler scheduler [1..15] delay fn                            
+
+        printfn "%A" (xs |> Seq.toList)
+
+        Assert.Fail()
+
 //    [<Test>]
 //    member x.HotObservables () =
 //

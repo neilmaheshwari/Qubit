@@ -23,7 +23,8 @@ module Property =
 
         let subDisposable = 
             obs
-            |> Observable.subscribe (fun v -> value <- v)
+            |> Observable.subscribe (fun v -> 
+                value <- v)
 
         member this.Observable = obs
 
@@ -61,7 +62,8 @@ module Property =
                 Observable.Return t
             | Varying property -> property.Observable
 
-    let value (p : Property<'T>) = p.Value
+    let value (p : Property<'T>) = 
+        p.Value
 
     let onNextWith f (p : Property<'T>) = p.OnNextWith f
 

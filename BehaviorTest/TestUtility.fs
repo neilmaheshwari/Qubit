@@ -25,6 +25,17 @@ open Microsoft.Reactive.Testing
                 StringField : Property<string>
             }
 
+        type InnerRecord = 
+            {
+                Stream : IObservable<int>
+            }
+
+        type OuterRecord = 
+            {
+                Timestamp : int
+                NestedRecord : InnerRecord
+            }
+
         let generateScheduledInts scheduler delayTicks initial final = 
             Observable.Interval(TimeSpan.FromTicks delayTicks, scheduler)
             |> Observable.map int
