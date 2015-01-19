@@ -149,8 +149,16 @@ type Properties() =
 
         let constantString = returnC "$$$"
 
+        let obs = 
+            (generateScheduledInts scheduler ((int64 5) * delay) 0 100)
+            |> (fun x -> Observable.Do (x, fun y -> printfn "Remote observable generator published %A" y))
+
+        Atom.Observer.remote "generator" obs
+
+        let remoteObservable = Atom.Observable.remote "generator"
+
         let obsStream = 
-            let y = generateScheduledInts scheduler ((int64 5) * delay) 0 100
+            let y = remoteObservable.Observable
             y
             |> Observable.map (
                 fun x -> 
@@ -158,12 +166,12 @@ type Properties() =
                         if x > 0 then
                             {
                                 FloatField = constantFloats
-                                IntField = returnV 99 ((streamFrom100) |> Observable.takeUntilOther y) 
+                                IntField = returnV 99 (streamFrom100 |> Observable.takeUntilOther y) 
                             }
                         else
                             {
                                 FloatField = constantFloats
-                                IntField = returnV 0 ((streamFrom0) |> Observable.takeUntilOther y)
+                                IntField = returnV 0 (streamFrom0 |> Observable.takeUntilOther y)
                             }
                     {
                         StringField = returnC <| string x
