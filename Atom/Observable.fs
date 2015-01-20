@@ -30,9 +30,6 @@ type RemoteObservable<'T> (channel) =
     member this.Observable = Observable.createWithDisposable (fun subscriber ->
         key <- key + 1
         observers <- Map.add key subscriber observers
-        match state with
-        | Some state -> subscriber.OnNext state
-        | _ -> ()
         Axon.trigger (channel + ":OnSubscribed") key
         {new IDisposable with
             member x.Dispose () =

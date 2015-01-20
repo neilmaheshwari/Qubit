@@ -151,7 +151,6 @@ type Properties() =
 
         let obs = 
             (generateScheduledInts scheduler ((int64 5) * delay) 0 100)
-            |> (fun x -> Observable.Do (x, fun y -> printfn "Remote observable generator published %A" y))
 
         Atom.Observer.remote "generator" obs
 
@@ -159,6 +158,11 @@ type Properties() =
 
         let obsStream = 
             let y = remoteObservable.Observable
+                    |> fun x -> Observable.Do (x, printfn "Remote observable pushing: %A")
+                    |> Observable.publish
+
+            let disp = Observable.connect y
+
             y
             |> Observable.map (
                 fun x -> 
@@ -166,7 +170,7 @@ type Properties() =
                         if x > 0 then
                             {
                                 FloatField = constantFloats
-                                IntField = returnV 99 (streamFrom100 |> Observable.takeUntilOther y) 
+                                IntField = returnV 99 (streamFrom100 |> Observable.takeUntilOther y)
                             }
                         else
                             {
@@ -178,10 +182,10 @@ type Properties() =
                         NestedField = returnC nested
 
                     })
-            |> fun x -> Observable.Do (x, fun o -> 
-                printfn "--------------------"
-                printfn "Published: %A" (value o.StringField)
-                printfn "--------------------")
+            |> fun x -> Observable.Do (x, fun o -> ())
+                //printfn "--------------------"
+                //printfn "Published: %A" (value o.StringField)
+                //printfn "--------------------")
 
         let initial =
             {
@@ -208,7 +212,7 @@ type Properties() =
             printfn "Builder has value : %A" (value n)
             xs.Add <| value n
 
-        loopWithScheduler scheduler [1..15] delay fn                            
+        loopWithScheduler scheduler [1..50] delay fn                            
 
         printfn "%A" (xs |> Seq.toList)
 
