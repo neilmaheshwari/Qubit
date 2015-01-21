@@ -25,15 +25,13 @@ open Microsoft.Reactive.Testing
                 StringField : Property<string>
             }
 
-        type InnerRecord = 
-            {
-                Stream : IObservable<int>
-            }
+        type Level = Level of int
 
-        type OuterRecord = 
+        type SilverTime = SilverTime of int
+
+        type Homebase =
             {
-                Timestamp : int
-                NestedRecord : InnerRecord
+                SilverMineLevel : Level
             }
 
         let generateScheduledInts scheduler delayTicks initial final = 

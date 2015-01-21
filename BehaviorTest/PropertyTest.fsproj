@@ -73,6 +73,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\..\Microsoft SDKs\F#\3.1\Framework\v4.0\Microsoft.FSharp.Targets" />
   <ItemGroup>
+    <Compile Include="RemoteTests.fs" />
     <None Include="packages.config" />
   </ItemGroup>
 </Project>

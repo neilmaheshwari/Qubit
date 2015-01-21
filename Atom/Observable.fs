@@ -11,11 +11,9 @@ open Nessos.FsPickler.Combinators
 type RemoteObservable<'T> (channel) =
 
     let mutable key = 0
-    let mutable state = None
     let mutable observers = Map.empty : Map<int,IObserver<'T>>
 
     let onNext (v) =
-        state <- Some v
         observers |> Seq.iter (fun (KeyValue(_,obs)) -> obs.OnNext v)
     let onCompleted () = observers |> Seq.iter (fun (KeyValue(_,obs)) -> obs.OnCompleted ())
     let onError (err) = observers |> Seq.iter (fun (KeyValue(_,obs)) -> obs.OnError err)
