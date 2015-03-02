@@ -7,55 +7,13 @@ open System.Reactive.Disposables
 open Nessos.FsPickler
 open Nessos.FsPickler.Combinators
 
-type Property<'T> (observable: IObservable<'T>, initial) =
-
-    let mutable cached = false
-    let mutable value = initial
-    let mutable key = 0
-    let mutable observers = Map.empty : Map<int,IObserver<'T>>
-
-    let onNext (v) =
-        value <- v
-        cached <- true
-        observers |> Seq.iter (fun (KeyValue(_,obs)) -> obs.OnNext v)
-    let onCompleted () = observers |> Seq.iter (fun (KeyValue(_,obs)) -> obs.OnCompleted ())
-    let onError (err) = observers |> Seq.iter (fun (KeyValue(_,obs)) -> obs.OnError err)
-
-    let mutable disposable = None
-
-    member this.Observable = 
-        Observable.createWithDisposable (fun subscriber ->
-            key <- key + 1
-            observers <- Map.add key subscriber observers
-            if cached then
-                subscriber.OnNext value
-            match disposable with
-            | Some disposable -> ()
-            | None -> disposable <- Some (observable.Subscribe (onNext, onError, onCompleted))
-            {new IDisposable with
-                 member x.Dispose () =
-                     observers <- Map.remove key observers})
-
-    member this.Value
-        with get () = value
-
-    interface IDisposable with
-        member this.Dispose () =
-            onCompleted ()
-            observers <- Map.empty
-            match disposable with
-            | Some disposable -> disposable.Dispose ()
-            | _ -> ()
-
 [<CustomPickler>]
 type RemoteObservable<'T> (channel) =
 
     let mutable key = 0
-    let mutable state = None
     let mutable observers = Map.empty : Map<int,IObserver<'T>>
 
     let onNext (v) =
-        state <- Some v
         observers |> Seq.iter (fun (KeyValue(_,obs)) -> obs.OnNext v)
     let onCompleted () = observers |> Seq.iter (fun (KeyValue(_,obs)) -> obs.OnCompleted ())
     let onError (err) = observers |> Seq.iter (fun (KeyValue(_,obs)) -> obs.OnError err)
@@ -70,9 +28,6 @@ type RemoteObservable<'T> (channel) =
     member this.Observable = Observable.createWithDisposable (fun subscriber ->
         key <- key + 1
         observers <- Map.add key subscriber observers
-        match state with
-        | Some state -> subscriber.OnNext state
-        | _ -> ()
         Axon.trigger (channel + ":OnSubscribed") key
         {new IDisposable with
             member x.Dispose () =
@@ -132,9 +87,6 @@ module Observable =
                 observable
 
     open __
-
-    let property (initial : 'T) obs =
-        new Property<'T> (obs, initial)
 
     let remote channel = (get channel)
 
