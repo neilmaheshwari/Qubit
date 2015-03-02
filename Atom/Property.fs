@@ -47,27 +47,13 @@ module Property =
             | Constant t -> t
             | Varying property -> property.Value
 
-        member x.OnNextWith f = 
-            match x with
-            | Constant t -> t
-            | Varying property ->
-                property.Observable
-                |> Observable.filteri (fun _ i -> i = 1)
-                |> Observable.filter f
-                |> Observable.First                    
-
         member x.ExposeStream =
             match x with
-            | Constant t -> 
-                Observable.Return t
+            | Constant t -> Observable.single t
             | Varying property -> property.Observable
 
     let value (p : Property<'T>) = 
         p.Value
-
-    let onNextWith f (p : Property<'T>) = p.OnNextWith f
-
-    let onNext p = onNextWith (fun _ -> true) p
 
     let exposeStream (p : Property<'T>) = p.ExposeStream
 
@@ -114,14 +100,3 @@ module Builders =
         member __.Zero() = failwith "Zero"
 
     let propertyB = PropertyBuilder()
-
-    type PropertyFmapBuilder() = 
-
-        member __.Bind (p : Property<'a>, f: 'a -> Property<'b>) =
-            value (Property.fmap f p) //todo
-             
-        member __.ReturnFrom (p : Property<'T>) = p
-
-        member __.Zero() = failwith "Zero"
-
-    let propertyFmapBuilder = PropertyFmapBuilder()
