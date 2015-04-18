@@ -74,7 +74,13 @@ module Property =
                 returnV newValue newStream
 
     let bind (property : Property<'a>) (fn : ('a -> Property<'b>)) : Property<'b> =
-        fn (value property)
+        let initial = property |> value |> fn |> value
+        Builders.observe {
+            let! o = exposeStream property
+            return (o |> fn |> exposeStream)
+        }
+        |> Observable.switch
+        |> returnV initial
 
     let combine (p1 : Property<'a>) (p2 : Property<'b>) = 
         p2
@@ -85,9 +91,11 @@ module Builders =
 
     open Property
 
-    type PropertyBuilder() = 
+    type PropertyBuilder () = 
 
         member __.Return c = returnC c
+
+        member __.Return (initial, obs) = returnV initial obs
 
         member __.ReturnFrom (p : Property<'T>) = p
 
@@ -99,4 +107,4 @@ module Builders =
 
         member __.Zero() = failwith "Zero"
 
-    let propertyB = PropertyBuilder()
+    let propertyB = PropertyBuilder ()

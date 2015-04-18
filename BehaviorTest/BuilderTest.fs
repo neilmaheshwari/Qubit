@@ -39,7 +39,7 @@ type Builders() =
                 NestedField = returnC record1Instance
             } 
         
-        let fn _ = 
+        let builder = 
             propertyB {
                 let! n = record2Instance.NestedField
                 let! f = n.FloatField
@@ -47,9 +47,7 @@ type Builders() =
                 let! s = record2Instance.StringField
                 return (f, i, s)                
             }
-            |> value
-            |> xs.Add
 
-        loopWithScheduler scheduler [1..2] delay fn
+        loopWithScheduler scheduler [1..2] delay (fun _ -> builder |> value |> xs.Add)
 
         xs |> ``should equal list`` [ (109.0, 1, "1"); (109.0, 2, "2") ]
